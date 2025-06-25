@@ -188,7 +188,7 @@ namespace Polymesh {
     }
 
     function shouldCull(idx: number[], v: { z: number }[], vv: { z: number}, inner?: boolean) {
-        return idx.some(i => (inner ? v[i].z < vv.z : v[i].z > vv.z || v[i].z == vv.z));
+        return idx.some((i) => (inner ? v[i].z < vv.z : v[i].z > vv.z || v[i].z == vv.z));
     }
 
     function onScreen(idx: number[], v: { x: number; y: number }[], img: Image) {
