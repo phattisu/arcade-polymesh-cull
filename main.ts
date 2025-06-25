@@ -92,32 +92,34 @@ namespace Polymesh {
         let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
         let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
         let cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
-
+        let culledArray: boolean[] = []
 
         // Transform vertices
-        const rotated = mymesh.cvs.map(v => {
-            let x = (v.x - camx) * size;
-            let y = (v.y - camy) * size;
-            let z = (v.z - camz) * size;
+        const rotated = mymesh.cvs.map((vertex, index) => {
+            let x = vertex.x, y = vertex.y, z = vertex.z;
+            if (!(index > 5 && index < 9)) x -= camx, y -= camy, z -= camz;
+            // Rotate y
+            let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+            let rotatedX = x * cosY + z * sinY, rotatedZ = -x * sinY + z * cosY;
 
-            // Rotate Y
-            const cosY = Math.cos(aychange), sinY = Math.sin(aychange);
-            [x, z] = [x * cosY + z * sinY, -x * sinY + z * cosY];
+            // Rotate x
+            let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+            let rotatedZ2 = rotatedZ * cosX - y * sinX, rotatedY2 = rotatedZ * sinX + y * cosX;
 
-            // Rotate X
-            const cosX = Math.cos(axchange), sinX = Math.sin(axchange);
-            [y, z] = [y * cosX - z * sinX, y * sinX + z * cosX];
+        
+            // Rotate z
+            let cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
+            let rotatedX2 = rotatedX * cosZ - rotatedY2 * sinZ, rotatedY3 = rotatedX * sinZ + rotatedY2 * cosZ;
 
-            // Rotate Z
-            const cosZ = Math.cos(azchange), sinZ = Math.sin(azchange);
-            [x, y] = [x * cosZ - y * sinZ, x * sinZ + y * cosZ];
+            // perspective
+            let scaleFactor = 150 / (150 + rotatedZ2);
+            let projectedX = rotatedX2 * scaleFactor, projectedY = rotatedY2 * scaleFactor;
 
-            const scale = 150 / (150 + z);
-            return {
-                x: centerX + x * scale,
-                y: centerY + y * scale,
-                z
-            };
+            // screen coordinates
+            let screenX = centerX + projectedX, screenY = centerY + projectedY;
+
+            culledArray[index] = (rotatedZ2 <= -100)
+            return { x: screenX, y: screenY, z: rotatedZ2 }
         });
 
         // Sort
