@@ -55,10 +55,10 @@ namespace Polymesh {
         //% c.shadow=colorindexpicker
         //% weight=87
         public settriangle(idx: number, c: number, i1: number, i2: number, i3: number, i4?: number, img?: Image) {
-            if (i4) {
-                if (img) this.cts[idx] = { indices: [i1, i2, i3, i4], color: c, img: img }
-                else this.cts[idx] = { indices: [i1, i2, i3, i4], color: c }
-            } else this.cts[idx] = { indices: [i1, i2, i3], color: c }
+            let indice = [i1, i2, i3]
+            if (i4) indice.push(i4)
+            if (i4 && img) this.cts[idx] = { indices: indice, color: c, img: img }
+            else this.cts[idx] = { indices: indice, color: c }
         }
 
         //% blockid=poly_delvertice
@@ -80,11 +80,11 @@ namespace Polymesh {
     let sizechange = 0, sort = 2
 
     //% blockid=poly_rendermesh
-    //% block=" $mymesh render to $image|| as inner? $innered"
+    //% block=" $mymesh render to $image|| as inner? $inner"
     //% mymesh.shadow=variables_get mymesh.defl=myMesh
     //% image.shadow=screen_image_picker
     //% weight=80
-export function render(mesh: mesh, image: Image, inner?: boolean) {
+    export function render(mesh: mesh, image: Image, inner?: boolean) {
         const centerX = image.width >> 1;
         const centerY = image.height >> 1;
         const size = 1 + sizechange;
