@@ -49,7 +49,7 @@ namespace Polymesh {
         public setvertice(idx: number, x: number, y: number, z: number) { this.cvs[idx] = { x: x, y: y, z: z } }
 
         //% blockid=poly_addtriangle
-        //% block=" $this set triangle in color $c at $idx by idc1 $i1 idc2 $i2 idc3 $i3|| idc4 $i4 and texture $img"
+        //% block=" $this set triangle in color $c at $idx by idc1 $i1 idc2 $i2 idc3 $i3|| idc4 $i4 and texture $img=screen_image_picker"
         //% this.shadow=variables_get this.defl=myMesh
         //% cct.shadow=poly_shadow_triangle
         //% c.shadow=colorindexpicker
