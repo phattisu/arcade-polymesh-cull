@@ -118,7 +118,7 @@ namespace Polymesh {
             // screen coordinates
             const screenX = centerX + projectedX, screenY = centerY + projectedY;
 
-            culledArray[index] = (rotatedZ2 > -100)
+            culledArray[index] = (rotatedZ2 <= -100)
             return { x: screenX, y: screenY, z: rotatedZ2 }
         });
 
@@ -196,11 +196,11 @@ namespace Polymesh {
     }
 
     function beginCull(idx: number[], cull: boolean[]) {
-        return idx.some((i) => (cull[i]))
+        return idx.some((i) => (!cull[i]))
     }
 
     function shouldCull(idx: number[], v: { z: number }[], vv: { z: number}, inner?: boolean) {
-        return idx.some((i) => (inner ? v[i].z < vv.z : v[i].z > vv.z || v[i].z == vv.z));
+        return idx.some((i) => ((inner ? v[i].z < vv.z : v[i].z > vv.z) || v[i].z == vv.z));
     }
 
     function onScreen(idx: number[], v: { x: number; y: number }[], img: Image) {
