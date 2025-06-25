@@ -89,9 +89,9 @@ namespace Polymesh {
         const centerY = image.height / 2;
         const size = sizechange;
         
-        let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
-        let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
-        let cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
+        const cosX = Math.cos(axchange), sinX = Math.sin(axchange);
+        const cosY = Math.cos(aychange), sinY = Math.sin(aychange);
+        const cosZ = Math.cos(azchange), sinZ = Math.sin(azchange);
         let culledArray: boolean[] = []
 
         // Transform vertices
@@ -99,26 +99,26 @@ namespace Polymesh {
             let x = vertex.x, y = vertex.y, z = vertex.z;
             if (!(index > 5 && index < 9)) x -= camx, y -= camy, z -= camz;
             // Rotate y
-            let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
-            let rotatedX = x * cosY + z * sinY, rotatedZ = -x * sinY + z * cosY;
+            //const cosY = Math.cos(aychange), sinY = Math.sin(aychange);
+            const rotatedX = x * cosY + z * sinY, rotatedZ = -x * sinY + z * cosY;
 
             // Rotate x
-            let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
-            let rotatedZ2 = rotatedZ * cosX - y * sinX, rotatedY2 = rotatedZ * sinX + y * cosX;
+            //const cosX = Math.cos(axchange), sinX = Math.sin(axchange);
+            const rotatedZ2 = rotatedZ * cosX - y * sinX, rotatedY2 = rotatedZ * sinX + y * cosX;
 
         
             // Rotate z
-            let cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
-            let rotatedX2 = rotatedX * cosZ - rotatedY2 * sinZ, rotatedY3 = rotatedX * sinZ + rotatedY2 * cosZ;
+            //let cosZ = Math.cos(azchange), sinZ = Math.sin(azchange);
+            const rotatedX2 = rotatedX * cosZ - rotatedY2 * sinZ, rotatedY3 = rotatedX * sinZ + rotatedY2 * cosZ;
 
             // perspective
-            let scaleFactor = 150 / (150 + rotatedZ2);
-            let projectedX = rotatedX2 * scaleFactor, projectedY = rotatedY2 * scaleFactor;
+            const scaleFactor = 150 / (150 + rotatedZ2);
+            const projectedX = rotatedX2 * scaleFactor, projectedY = rotatedY2 * scaleFactor;
 
             // screen coordinates
-            let screenX = centerX + projectedX, screenY = centerY + projectedY;
+            const screenX = centerX + projectedX, screenY = centerY + projectedY;
 
-            culledArray[index] = (rotatedZ2 <= -100)
+            culledArray[index] = (rotatedZ2 > -100)
             return { x: screenX, y: screenY, z: rotatedZ2 }
         });
 
@@ -135,6 +135,7 @@ namespace Polymesh {
             if (n) n++
             else n=0
             
+            if (beginCull(t.indices, culledArray)) continue;
             if (shouldCull(t.indices, rotated, rotated[n], inner)) continue;
             if (!onScreen(t.indices, rotated, image)) continue;
 
@@ -192,6 +193,10 @@ namespace Polymesh {
         }
         [arr[i], arr[hi]] = [arr[hi], arr[i]];
         return i;
+    }
+
+    function beginCull(idx: number[], cull: boolean[]) {
+        return idx.some((i) => (cull[i]))
     }
 
     function shouldCull(idx: number[], v: { z: number }[], vv: { z: number}, inner?: boolean) {
