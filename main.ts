@@ -88,6 +88,11 @@ namespace Polymesh {
         const centerX = image.width / 2;
         const centerY = image.height / 2;
         const size = sizechange;
+        
+        let cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+        let cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+        let cosZ = Math.cos(angleZ), sinZ = Math.sin(angleZ);
+
 
         // Transform vertices
         const rotated = mymesh.cvs.map(v => {
