@@ -84,13 +84,13 @@ namespace Polymesh {
     //% mymesh.shadow=variables_get mymesh.defl=myMesh
     //% image.shadow=screen_image_picker
     //% weight=80
-    export function render(mesh: mesh, image: Image, inner?: boolean) {
-        const centerX = image.width >> 1;
-        const centerY = image.height >> 1;
+    export function render(mymesh: mesh, image: Image, inner?: boolean) {
+        const centerX = image.width / 2;
+        const centerY = image.height / 2;
         const size = 1 + sizechange;
 
         // Transform vertices
-        const rotated = mesh.cvs.map(v => {
+        const rotated = mymesh.cvs.map(v => {
             let x = (v.x - camx) * size;
             let y = (v.y - camy) * size;
             let z = (v.z - camz) * size;
@@ -116,7 +116,7 @@ namespace Polymesh {
         });
 
         // Sort
-        const tris = mesh.cts.slice();
+        const tris = mymesh.cts.slice();
         if (sort == SortingMethods.Accurate) {
             tris.sort((a, b) => avgZ(b, rotated) - avgZ(a, rotated));
         } else {
