@@ -1,5 +1,4 @@
 
-
 //% block="Poly mesh" color="#279139" icon="\uf1b2" groups='["Create","Controls","Styling"]'
 namespace Polymesh {
 
@@ -141,9 +140,9 @@ namespace Polymesh {
                     rotated[t.indices[2]].x, rotated[t.indices[2]].y,
                     t.color);
                 helpers.imageFillTriangle(image,
-                    rotated[t.indices[0]].x, rotated[t.indices[0]].y,
-                    rotated[t.indices[2]].x, rotated[t.indices[2]].y,
                     rotated[t.indices[3]].x, rotated[t.indices[3]].y,
+                    rotated[t.indices[1]].x, rotated[t.indices[1]].y,
+                    rotated[t.indices[2]].x, rotated[t.indices[2]].y,
                     t.color);
             }
 
@@ -204,8 +203,7 @@ namespace Polymesh {
                 const dx = (1 - fy) * ((1 - fx) * x1 + fx * x2) + fy * ((1 - fx) * x4 + fx * x3);
                 const dy = (1 - fy) * ((1 - fx) * y1 + fx * y2) + fy * ((1 - fx) * y4 + fx * y3);
                 const col = src.getPixel(x, y);
-                if (col > 0)
-                    dst.setPixel(dx | 0, dy | 0, col);
+                if (col > 0) dst.setPixel(dx | 0, dy | 0, col);
             }
         }
     }
