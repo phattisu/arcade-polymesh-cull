@@ -76,7 +76,7 @@ namespace Polymesh {
 
     let axchange = 0, azchange = 0, aychange = 0
     let camx = 0, camy = 0, camz = 0
-    let sizechange = 0, sort = 2
+    let sizechange = 1, sort = 2
 
     //% blockid=poly_rendermesh
     //% block=" $mymesh render to $image|| as inner? $inner"
@@ -87,7 +87,7 @@ namespace Polymesh {
     export function render(mymesh: mesh, image: Image, inner?: boolean) {
         const centerX = image.width / 2;
         const centerY = image.height / 2;
-        const size = 1 + sizechange;
+        const size = sizechange;
 
         // Transform vertices
         const rotated = mymesh.cvs.map(v => {
@@ -122,9 +122,13 @@ namespace Polymesh {
         } else {
             quicksort(tris, 0, tris.length - 1, rotated);
         }
-
+        
+        let n: number
         for (const t of tris) {
-            if (shouldCull(t.indices, rotated, inner)) continue;
+            if (n) n++
+            else n=0
+            
+            if (shouldCull(t.indices, rotated, rotated[n], inner)) continue;
             if (!onScreen(t.indices, rotated, image)) continue;
 
             // Solid color
@@ -183,8 +187,8 @@ namespace Polymesh {
         return i;
     }
 
-    function shouldCull(idx: number[], v: { z: number }[], inner?: boolean) {
-        return idx.some(i => (inner ? v[i].z < -100 : v[i].z > 100));
+    function shouldCull(idx: number[], v: { z: number }[], vv: { z: number}, inner?: boolean) {
+        return idx.some(i => (inner ? v[i].z < vv.z : v[i].z > vv.z || v[i].z == vv.z));
     }
 
     function onScreen(idx: number[], v: { x: number; y: number }[], img: Image) {
