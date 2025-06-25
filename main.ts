@@ -82,6 +82,7 @@ namespace Polymesh {
     //% block=" $mymesh render to $image|| as inner? $inner"
     //% mymesh.shadow=variables_get mymesh.defl=myMesh
     //% image.shadow=screen_image_picker
+    //% inner.shadow=toggleYesNo
     //% weight=80
     export function render(mymesh: mesh, image: Image, inner?: boolean) {
         const centerX = image.width / 2;
@@ -200,10 +201,12 @@ namespace Polymesh {
             for (let x = 0; x < src.width; x++) {
                 const fx = x / src.width;
                 const fy = y / src.height;
-                const dx = (1 - fy) * ((1 - fx) * x1 + fx * x2) + fy * ((1 - fx) * x4 + fx * x3);
-                const dy = (1 - fy) * ((1 - fx) * y1 + fx * y2) + fy * ((1 - fx) * y4 + fx * y3);
+                const dx = (1 - fy) * ((1 - fx) * (x1) + fx * (x2)) + fy * ((1 - fx) * (x3) + fx * (x4));
+                const dy = (1 - fy) * ((1 - fx) * (y1) + fx * (y2)) + fy * ((1 - fx) * (y3) + fx * (y4));
+                const siz = Math.max(1, sizechange)
+                const sizh = Math.floor(siz / 2)
                 const col = src.getPixel(x, y);
-                if (col > 0) dst.setPixel(dx | 0, dy | 0, col);
+                if (col > 0) helpers.imageFillRect(dst, (dx | 0) - sizh, (dy | 0) - sizh, siz, siz, col);
             }
         }
     }
