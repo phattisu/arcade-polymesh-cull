@@ -175,7 +175,10 @@ namespace Polymesh {
 
             // Draw texture over
             if (t.img && inds.length === 4) {
-                if (!pic || !pic.equals(t.img)) pic = t.img.clone(), pici = scaleXn(pic.clone(), zoom)
+                if (!pic || !pic.equals(t.img)) {
+                    pic = t.img.clone()
+                    pici = scaleXn(pic.clone(), zoom)
+                }
                 distortImage(pici, image,
                     rotated[inds[0]].x, rotated[inds[0]].y,
                     rotated[inds[1]].x, rotated[inds[1]].y,
@@ -186,15 +189,13 @@ namespace Polymesh {
         }
     }
 
-    export function scaleXn(original: Image, scale: number): Image {
+    export function scaleXn(original: Image, sc: number): Image {
         // Double the size of the original.
-        scale = Math.ceil(Math.max(1, scale))
-        scale = Math.ceil(scale * Math.sqrt(scale)) * 2
-        const toReturn: Image = image.create(original.width * scale, original.height * scale);
+        const scale = Math.ceil(Math.max(1, sc) * 1.2), toReturn: Image = image.create(original.width * scale, original.height * scale);
 
         for (let x: number = 0; x < original.width; x++) for (let y: number = 0; y < original.height; y++) helpers.imageFillRect(toReturn, x * scale, y * scale, scale, scale, original.getPixel(x, y))
         return toReturn;
-    }   // scale2x()
+    }
 
     function quickSort(arr: { indices: number[] }[], left: number, right: number, rot: { z: number }[]) {
         if (left >= right) return;
