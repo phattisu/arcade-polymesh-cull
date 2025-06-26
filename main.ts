@@ -184,12 +184,10 @@ namespace Polymesh {
             if (debug && debug > 0) {
                 helpers.imageDrawLine( image, rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[1]].x, rotated[inds[1]].y, debug);
                 helpers.imageDrawLine(image, rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
-                helpers.imageDrawLine(image, rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
                 if (inds.length > 3) {
-                    helpers.imageDrawLine(image, rotated[inds[0]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, debug);
-                    helpers.imageDrawLine(image, rotated[inds[0]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
-                    helpers.imageDrawLine(image, rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
-                }
+                    helpers.imageDrawLine(image, rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, debug);
+                    helpers.imageDrawLine(image, rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
+                } else helpers.imageDrawLine(image, rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
             }
         }
     }
