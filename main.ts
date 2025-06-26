@@ -3,20 +3,22 @@
 namespace Polymesh {
 
     export enum Angles {
-        //% block="x"
+        //% block="Angle x"
         AngleX = 0,
-        //% block="y"
+        //% block="Angle y"
         AngleY = 1,
-        //% block="z"
+        //% block="Angle z"
         AngleZ = 2,
     }
     export enum Cameras {
-        //% block="x"
+        //% block="Camera x"
         CamX = 0,
-        //% block="y"
+        //% block="Camera y"
         CamY = 1,
-        //% block="z"
+        //% block="Camera z"
         CamZ = 2,
+        //% block="Camera zoom"
+        Zoom = 3,
     }
     export enum SortingMethods {
         //% block="accurate"
@@ -74,9 +76,9 @@ namespace Polymesh {
 
     }
 
-    let axchange = 0, azchange = 0, aychange = 0
+    let ax = 0, az = 0, ay = 0
     let camx = 0, camy = 0, camz = 0
-    let sizechange = 1, sort = 2
+    let zoom = 1, sort = 2
 
     //% blockid=poly_rendermesh
     //% block=" $mymesh render to $image|| as inner? $inner"
@@ -84,167 +86,138 @@ namespace Polymesh {
     //% image.shadow=screen_image_picker
     //% inner.shadow=toggleYesNo
     //% weight=80
-    export function render(mymesh: mesh, image: Image, inner?: boolean) {
-        const centerX = image.width / 2;
-        const centerY = image.height / 2;
-        const size = sizechange;
-        
-        const cosX = Math.cos(axchange), sinX = Math.sin(axchange);
-        const cosY = Math.cos(aychange), sinY = Math.sin(aychange);
-        const cosZ = Math.cos(azchange), sinZ = Math.sin(azchange);
-        let culledArray: boolean[] = []
+    export function render(mymesh: mesh, image: Image, inner: boolean = false) {
+        const centerX = image.width >> 1;
+        const centerY = image.height >> 1;
+
+        const cox = Math.cos(ax), sinX = Math.sin(ax);
+        const coy = Math.cos(ay), sinY = Math.sin(ay);
+        const cosZ = Math.cos(az), sinZ = Math.sin(az);
 
         // Transform vertices
-        const rotated = mymesh.cvs.map((vertex, index) => {
-            let x = vertex.x, y = vertex.y, z = vertex.z;
-            if (!(index > 5 && index < 9)) x -= camx, y -= camy, z -= camz;
-            // Rotate y
-            //const cosY = Math.cos(aychange), sinY = Math.sin(aychange);
-            const rotatedX = x * cosY + z * sinY, rotatedZ = -x * sinY + z * cosY;
+        const rotated = mymesh.cvs.map(v => {
+            let x = v.x - camx;
+            let y = v.y - camy;
+            let z = v.z - camz;
 
-            // Rotate x
-            //const cosX = Math.cos(axchange), sinX = Math.sin(axchange);
-            const rotatedZ2 = rotatedZ * cosX - y * sinX, rotatedY2 = rotatedZ * sinX + y * cosX;
+            // Rotate Y
+            let tx = x * coy + z * sinY;
+            z = -x * sinY + z * coy;
+            x = tx;
 
-        
-            // Rotate z
-            //let cosZ = Math.cos(azchange), sinZ = Math.sin(azchange);
-            const rotatedX2 = rotatedX * cosZ - rotatedY2 * sinZ, rotatedY3 = rotatedX * sinZ + rotatedY2 * cosZ;
+            // Rotate X
+            let ty = y * cox - z * sinX;
+            z = y * sinX + z * cox;
+            y = ty;
 
-            // perspective
-            const scaleFactor = 150 / (150 + rotatedZ2);
-            const projectedX = rotatedX2 * scaleFactor, projectedY = rotatedY2 * scaleFactor;
+            // Rotate Z
+            tx = x * cosZ - y * sinZ;
+            y = x * sinZ + y * cosZ;
+            x = tx;
 
-            // screen coordinates
-            const screenX = centerX + projectedX, screenY = centerY + projectedY;
-
-            culledArray[index] = (rotatedZ2 <= -100)
-            return { x: screenX, y: screenY, z: rotatedZ2 }
+            // Perspective
+            const dist = 150;
+            const scale = dist / (dist + z);
+            return {
+                x: centerX + x * scale * zoom,
+                y: centerY + y * scale * zoom,
+                z: z
+            };
         });
 
-        // Sort
+        // Sort triangles
         const tris = mymesh.cts.slice();
-        if (sort == SortingMethods.Accurate) {
-            tris.sort((a, b) => avgZ(b, rotated) - avgZ(a, rotated));
-        } else {
-            quicksort(tris, 0, tris.length - 1, rotated);
-        }
-        
-        let n: number
+        tris.sort((a, b) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices));
+
+        // Render
         for (const t of tris) {
-            if (n) n++
-            else n=0
-            
-            if (beginCull(t.indices, culledArray)) continue;
-            if (shouldCull(t.indices, rotated, rotated[n], inner)) continue;
-            if (!onScreen(t.indices, rotated, image)) continue;
+            const inds = t.indices;
+            if (inds.some(i => rotated[i].z < -150)) continue;
+            if (inds.every(i => (rotated[i].x < 0 || rotated[i].x >= image.width) || (rotated[i].y < 0 || rotated[i].y >= image.height))) continue;
 
-            // Solid color
-            if (t.indices.length == 3) {
-                helpers.imageFillTriangle(image,
-                    rotated[t.indices[0]].x, rotated[t.indices[0]].y,
-                    rotated[t.indices[1]].x, rotated[t.indices[1]].y,
-                    rotated[t.indices[2]].x, rotated[t.indices[2]].y,
-                    t.color);
-            } else if (t.indices.length == 4) {
-                helpers.imageFillTriangle(image,
-                    rotated[t.indices[0]].x, rotated[t.indices[0]].y,
-                    rotated[t.indices[1]].x, rotated[t.indices[1]].y,
-                    rotated[t.indices[2]].x, rotated[t.indices[2]].y,
-                    t.color);
-                helpers.imageFillTriangle(image,
-                    rotated[t.indices[3]].x, rotated[t.indices[3]].y,
-                    rotated[t.indices[1]].x, rotated[t.indices[1]].y,
-                    rotated[t.indices[2]].x, rotated[t.indices[2]].y,
-                    t.color);
+            const depthCheck = inner
+                ? inds.every(i => rotated[i].z < 0)
+                : inds.every(i => rotated[i].z >= 0);
+            if (!depthCheck) continue;
+
+            // Draw solid
+            if (inds.length === 3) {
+                helpers.imageFillTriangle(
+                    image,
+                    rotated[inds[0]].x, rotated[inds[0]].y,
+                    rotated[inds[1]].x, rotated[inds[1]].y,
+                    rotated[inds[2]].x, rotated[inds[2]].y,
+                    t.color
+                );
+            } else if (inds.length === 4) {
+                helpers.imageFillTriangle(
+                    image,
+                    rotated[inds[0]].x, rotated[inds[0]].y,
+                    rotated[inds[1]].x, rotated[inds[1]].y,
+                    rotated[inds[2]].x, rotated[inds[2]].y,
+                    t.color
+                );
+                helpers.imageFillTriangle(
+                    image,
+                    rotated[inds[3]].x, rotated[inds[3]].y,
+                    rotated[inds[1]].x, rotated[inds[1]].y,
+                    rotated[inds[2]].x, rotated[inds[2]].y,
+                    t.color
+                );
             }
 
-            // Texture (overpaint)
-            if (t.img && t.indices.length == 4) {
-                renderMode7(t.img, image,
-                    rotated[t.indices[0]].x, rotated[t.indices[0]].y,
-                    rotated[t.indices[1]].x, rotated[t.indices[1]].y,
-                    rotated[t.indices[2]].x, rotated[t.indices[2]].y,
-                    rotated[t.indices[3]].x, rotated[t.indices[3]].y);
+            // Draw texture over
+            if (t.img && inds.length === 4) {
+                distortImage(t.img, image,
+                    rotated[inds[0]].x, rotated[inds[0]].y,
+                    rotated[inds[1]].x, rotated[inds[1]].y,
+                    rotated[inds[2]].x, rotated[inds[2]].y,
+                    rotated[inds[3]].x, rotated[inds[3]].y
+                );
             }
         }
     }
 
-    function avgZ(tri: { indices: number[] }, v: { z: number }[]) {
-        return tri.indices.reduce((s, i) => s + v[i].z, 0) / tri.indices.length;
+    function avgZ(rot: { z: number }[], inds: number[]): number {
+        return inds.reduce((s, i) => s + rot[i].z, 0) / inds.length;
     }
 
-    function quicksort(arr: any[], lo: number, hi: number, v: { z: number }[]) {
-        if (lo < hi) {
-            const p = partition(arr, lo, hi, v);
-            quicksort(arr, lo, p - 1, v);
-            quicksort(arr, p + 1, hi, v);
-        }
-    }
-
-    function partition(arr: any[], lo: number, hi: number, v: { z: number }[]) {
-        const pivot = avgZ(arr[hi], v);
-        let i = lo;
-        for (let j = lo; j < hi; j++) {
-            if (avgZ(arr[j], v) > pivot) {
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-                i++;
-            }
-        }
-        [arr[i], arr[hi]] = [arr[hi], arr[i]];
-        return i;
-    }
-
-    function beginCull(idx: number[], cull: boolean[]) {
-        return idx.some((i) => (!cull[i]))
-    }
-
-    function shouldCull(idx: number[], v: { z: number }[], vv: { z: number}, inner?: boolean) {
-        return idx.some((i) => ((inner ? v[i].z < vv.z : v[i].z > vv.z) || v[i].z == vv.z));
-    }
-
-    function onScreen(idx: number[], v: { x: number; y: number }[], img: Image) {
-        return idx.some(i => v[i].x >= 0 && v[i].x < img.width && v[i].y >= 0 && v[i].y < img.height);
-    }
-
-    function renderMode7(src: Image, dst: Image, 
-        x1: number, y1: number,
-        x2: number, y2: number,
-        x3: number, y3: number,
-        x4: number, y4: number) {
-        
-        for (let y = 0; y < src.height; y++) {
-            for (let x = 0; x < src.width; x++) {
-                const fx = x / src.width;
-                const fy = y / src.height;
-                const dx = (1 - fy) * ((1 - fx) * (x1) + fx * (x2)) + fy * ((1 - fx) * (x3) + fx * (x4));
-                const dy = (1 - fy) * ((1 - fx) * (y1) + fx * (y2)) + fy * ((1 - fx) * (y3) + fx * (y4));
-                const siz = Math.max(1, sizechange)
-                const sizh = Math.floor(siz / 2)
+    function distortImage(src: Image, dest: Image,
+        x1: number, y1: number, x2: number, y2: number,
+        x3: number, y3: number, x4: number, y4: number) {
+        const w = src.width;
+        const h = src.height;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const fx = x / (w - 1);
+                const fy = y / (h - 1);
+                const sx = (1 - fy) * (x1 + fx * (x2 - x1)) + fy * (x3 + fx * (x3 - x4));
+                const sy = (1 - fy) * (y1 + fx * (y2 - y1)) + fy * (y3 + fx * (y3 - y4));
                 const col = src.getPixel(x, y);
-                if (col > 0) helpers.imageFillRect(dst, (dx | 0) - sizh, (dy | 0) - sizh, siz, siz, col);
+                if (col) dest.setPixel(Math.round(sx), Math.round(sy), col);
             }
         }
     }
 
     //% blockid=poly_angle_change
-    //% block="change angle $choice by $x"
+    //% block="change $choice by $x"
     //% weight=60
     export function changeAngle(choice: Angles, x: number) {
         switch (choice) {
-            case 0: axchange += x; break
-            case 1: aychange += x; break
-            case 2: azchange += x; break
+            case 0: ax += x; break
+            case 1: ay += x; break
+            case 2: az += x; break
         }
     }
     //% blockid=poly_camera_change
-    //% block="change camera $choice by $x"
+    //% block="change $choice by $x"
     //% weight=59
     export function changeCam(choice: Cameras, x: number) {
         switch (choice) {
             case 0: camx += x; break
             case 1: camy += x; break
             case 2: camz += x; break
+            case 3: zoom += x; break
         }
     }
     //% blockid=poly_angle_set
@@ -252,26 +225,21 @@ namespace Polymesh {
     //% weight=58
     export function setAngle(choice: Angles, x: number) {
         switch (choice) {
-            case 0: axchange = x; break
-            case 1: aychange = x; break
-            case 2: azchange = x; break
+            case 0: ax = x; break
+            case 1: ay = x; break
+            case 2: az = x; break
         }
     }
     //% blockid=poly_camera_set
-    //% block="set camera $choice by $x"
+    //% block="set $choice by $x"
     //% weight=59
     export function setCam(choice: Cameras, x: number) {
         switch (choice) {
             case 0: camx = x; break
             case 1: camy = x; break
             case 2: camz = x; break
+            case 3: zoom = x; break
         }
-    }
-    //% blockid=poly_size
-    //% block="set size to $x"
-    //% weight=50
-    export function setSize(x: number) {
-        sizechange = x
     }
 
     //% blockid=poly_sorttype
@@ -285,19 +253,19 @@ namespace Polymesh {
     //% block="angle x"
     //% weight=40
     export function angleX() {
-        return axchange
+        return ax
     }
     //% blockid=poly_angle_y
     //% block="angle y"
     //% weight=39
     export function angleY() {
-        return aychange
+        return ay
     }
     //% blockid=poly_angle_z
     //% block="angle z"
     //% weight=38
     export function angleZ() {
-        return azchange
+        return az
     }
 
     //% blockid=poly_camera_setpos
