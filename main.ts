@@ -86,13 +86,14 @@ namespace Polymesh {
     let zoom = 1, sort = 0
 
     //% blockid=poly_rendermesh
-    //% block=" $mymesh render to $image|| as inner? $inner"
+    //% block=" $mymesh render to $image|| as inner? $inner and debug color? $debug"
     //% mymesh.shadow=variables_get mymesh.defl=myMesh
     //% image.shadow=screen_image_picker
     //% inner.shadow=toggleYesNo
+    //% debug.shadow=colorindexpicker
     //% group="render"
     //% weight=80
-    export function render(mymesh: mesh, image: Image, inner: boolean = false) {
+    export function render(mymesh: mesh, image: Image, inner?: boolean, debug?: number) {
         const centerX = image.width >> 1;
         const centerY = image.height >> 1;
 
@@ -148,22 +149,14 @@ namespace Polymesh {
             if (!depthCheck) continue;
 
             // Draw solid
-            if (inds.length === 3) {
-                helpers.imageFillTriangle(
-                    image,
-                    rotated[inds[0]].x, rotated[inds[0]].y,
-                    rotated[inds[1]].x, rotated[inds[1]].y,
-                    rotated[inds[2]].x, rotated[inds[2]].y,
-                    t.color
-                );
-            } else if (inds.length === 4) {
-                helpers.imageFillTriangle(
-                    image,
-                    rotated[inds[0]].x, rotated[inds[0]].y,
-                    rotated[inds[1]].x, rotated[inds[1]].y,
-                    rotated[inds[2]].x, rotated[inds[2]].y,
-                    t.color
-                );
+            helpers.imageFillTriangle(
+                image,
+                rotated[inds[0]].x, rotated[inds[0]].y,
+                rotated[inds[1]].x, rotated[inds[1]].y,
+                rotated[inds[2]].x, rotated[inds[2]].y,
+                t.color
+            );
+            if (inds.length > 3) {
                 helpers.imageFillTriangle(
                     image,
                     rotated[inds[3]].x, rotated[inds[3]].y,
@@ -185,6 +178,18 @@ namespace Polymesh {
                     rotated[inds[2]].x, rotated[inds[2]].y,
                     rotated[inds[3]].x, rotated[inds[3]].y
                 );
+            }
+
+            // Draw debug canvas
+            if (debug && debug > 0) {
+                helpers.imageDrawLine( image, rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[1]].x, rotated[inds[1]].y, debug);
+                helpers.imageDrawLine(image, rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
+                helpers.imageDrawLine(image, rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
+                if (inds.length > 3) {
+                    helpers.imageDrawLine(image, rotated[inds[0]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, debug);
+                    helpers.imageDrawLine(image, rotated[inds[0]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
+                    helpers.imageDrawLine(image, rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, debug);
+                }
             }
         }
     }
