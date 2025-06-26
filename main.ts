@@ -175,10 +175,7 @@ namespace Polymesh {
 
             // Draw texture over
             if (t.img && inds.length === 4) {
-                if (!pic || !pic.equals(t.img)) {
-                    pic = t.img.clone(), pici = pic.clone()
-                    for (let n = 0; n < Math.max(0, zoom); n++) pici = scale2x(pici.clone())
-                }
+                if (!pic || !pic.equals(t.img)) pic = t.img.clone(), pici = scaleXn(pic.clone(), zoom)
                 distortImage(pici, image,
                     rotated[inds[0]].x, rotated[inds[0]].y,
                     rotated[inds[1]].x, rotated[inds[1]].y,
@@ -189,46 +186,12 @@ namespace Polymesh {
         }
     }
 
-    export function scale2x(original: Image): Image {
+    export function scaleXn(original: Image, scale: number): Image {
         // Double the size of the original.
-        let toReturn: Image = image.create(original.width << 1, original.height << 1);
+        scale = Math.max(1, Math.ceil(scale * 1.75))
+        const toReturn: Image = image.create(original.width * scale, original.height * scale);
 
-        for (let x: number = 0; x < original.width; x++) {
-            for (let y: number = 0; y < original.height; y++) {
-                // From original image:
-                // .a.
-                // cpb
-                // .d.
-                const p: color = original.getPixel(x, y);
-                const a: color = original.getPixel(x, y - 1);
-                const b: color = original.getPixel(x + 1, y);
-                const c: color = original.getPixel(x - 1, y);
-                const d: color = original.getPixel(x, y + 1);
-
-                // In scaled image:
-                // 12
-                // 34
-                const one: { x: number, y: number} = { x: x << 1, y: y << 1};
-                const two: { x: number, y: number} = { x: one.x + 1, y: one.y};
-                const three: { x: number, y: number} = { x: one.x, y: one.y + 1};
-                const four: { x: number, y: number} = { x: one.x + 1, y: one.y + 1};
-
-                // 1=P; 2=P; 3=P; 4=P;
-                // IF C== A AND C!= D AND A!= B => 1 = A
-                // IF A== B AND A!= C AND B!= D => 2 = B
-                // IF D== C AND D!= B AND C!= A => 3 = C
-                // IF B== D AND B!= A AND D!= C => 4 = D
-                toReturn.setPixel(one.x, one.y, p);
-                toReturn.setPixel(two.x, two.y, p);
-                toReturn.setPixel(three.x, three.y, p);
-                toReturn.setPixel(four.x, four.y, p);
-
-                if (c == a && c != d && a != b) toReturn.setPixel(one.x, one.y, a);// if ( c == a ...
-                if (a == b && a != c && b != d) toReturn.setPixel(two.x, two.y, b);// if ( a == b ...
-                if (d == c && d != b && c != a) toReturn.setPixel(three.x, three.y, c);// if ( d == c ...
-                if (b == d && b != a && d != c) toReturn.setPixel(four.x, four.y, d);// if ( b == d ...
-            }   // for ( y )
-        }   // for ( x )
+        for (let x: number = 0; x < original.width; x++) for (let y: number = 0; y < original.height; y++) helpers.imageFillRect(toReturn, x * scale, y * scale, scale, scale, original.getPixel(x, y))
         return toReturn;
     }   // scale2x()
 
@@ -265,7 +228,7 @@ namespace Polymesh {
         X3: number, Y3: number, X4: number, Y4: number) {
         for (let y = 0; y < src.height; y++) {
             for (let x = 0; x < src.width; x++) {
-                const col = src.getPixel(x, y);
+                const col = src.getPixel(src.width - x, src.height - y);
                 if (col && col > 0) dest.setPixel(Math.trunc((1 - y / src.height) * (X1 + x / src.width * (X2 - X1)) + y / src.height * (X3 + x / src.width * (X4 - X3))), Math.trunc((1 - x / src.width) * (Y1 + y / src.height * (Y3 - Y1)) + x / src.width * (Y2 + y / src.height * (Y4 - Y2))), col);
             }
         }
