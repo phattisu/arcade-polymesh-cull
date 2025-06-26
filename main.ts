@@ -78,7 +78,7 @@ namespace Polymesh {
 
     let ax = 0, az = 0, ay = 0
     let camx = 0, camy = 0, camz = 0
-    let zoom = 1, sort = 2
+    let zoom = 1, sort = 0
 
     //% blockid=poly_rendermesh
     //% block=" $mymesh render to $image|| as inner? $inner"
@@ -127,17 +127,17 @@ namespace Polymesh {
 
         // Sort triangles
         const tris = mymesh.cts.slice();
-        tris.sort((a, b) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices));
-
+        switch (sort) {
+            case 0: tris.sort((a, b) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices)); break
+            case 1: default: quickSort(tris, 0, tris.length - 1, rotated); break
+        }
         // Render
         for (const t of tris) {
             const inds = t.indices;
             if (inds.some(i => rotated[i].z < -150)) continue;
             if (inds.every(i => (rotated[i].x < 0 || rotated[i].x >= image.width) || (rotated[i].y < 0 || rotated[i].y >= image.height))) continue;
 
-            const depthCheck = inner
-                ? inds.every(i => rotated[i].z < 0)
-                : inds.every(i => rotated[i].z >= 0);
+            const depthCheck = rotated.some((ro) => ((inner ? inds.every(i => rotated[i].z > ro.z) : inds.every(i => rotated[i].z < ro.z)) || inds.every(i => rotated[i].z == ro.z)))
             if (!depthCheck) continue;
 
             // Draw solid
@@ -178,6 +178,30 @@ namespace Polymesh {
         }
     }
 
+    function quickSort(arr: { indices: number[] }[], left: number, right: number, rot: { z: number }[]) {
+        if (left >= right) return;
+        const pivotIndex = left + ((right - left) >> 1);
+        const pivotValue = avgZ(rot, arr[pivotIndex].indices);
+        const index = partition(arr, left, right, pivotValue, rot);
+        quickSort(arr, left, index - 1, rot);
+        quickSort(arr, index, right, rot);
+    }
+
+    function partition(arr: { indices: number[] }[], left: number, right: number, pivot: number, rot: { z: number }[]) {
+        while (left <= right) {
+            while (avgZ(rot, arr[left].indices) > pivot) left++;
+            while (avgZ(rot, arr[right].indices) < pivot) right--;
+            if (left <= right) {
+                const tmp = arr[left];
+                arr[left] = arr[right];
+                arr[right] = tmp;
+                left++;
+                right--;
+            }
+        }
+        return left;
+    }
+
     function avgZ(rot: { z: number }[], inds: number[]): number {
         return inds.reduce((s, i) => s + rot[i].z, 0) / inds.length;
     }
@@ -185,16 +209,17 @@ namespace Polymesh {
     function distortImage(src: Image, dest: Image,
         x1: number, y1: number, x2: number, y2: number,
         x3: number, y3: number, x4: number, y4: number) {
-        const w = src.width;
-        const h = src.height;
+        const w = src.width, h = src.height;
+        const zo = Math.max(1, zoom)
+        const zoh = zo / 2.2
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
-                const fx = x / (w - 1);
-                const fy = y / (h - 1);
-                const sx = (1 - fy) * (x1 + fx * (x2 - x1)) + fy * (x3 + fx * (x3 - x4));
-                const sy = (1 - fy) * (y1 + fx * (y2 - y1)) + fy * (y3 + fx * (y3 - y4));
+                const fx = x / (w - 1), fy = y / (h - 1);
+                const sx = (z: number) => (1 - fy) * ((x1 + z) + fx * ((x2 + z) - (x1 + z))) + fy * ((x3 + z) + fx * ((x4 + z) - (x3 + z)));
+                const sy = (z: number) => (1 - fy) * ((y1 + z) + fx * ((y2 + z) - (y1 + z))) + fy * ((y3 + z) + fx * ((y4 + z) - (y3 + z)));
+                const sx0 = sx(zoh), sx1 = sx(-zoh), sy0 = sy(zoh), sy1 = sy(-zoh)
                 const col = src.getPixel(x, y);
-                if (col) dest.setPixel(Math.round(sx), Math.round(sy), col);
+                if (col && col > 0) helpers.imageFillPolygon4(dest, sx0, sy0, sx1, sy0, sx0, sy1, sx1, sy1, col);
             }
         }
     }
