@@ -188,7 +188,8 @@ namespace Polymesh {
 
     export function scaleXn(original: Image, scale: number): Image {
         // Double the size of the original.
-        scale = Math.ceil(Math.max(1, scale)) * 4
+        scale = Math.ceil(Math.max(1, scale))
+        scale = Math.ceil(scale * Math.sqrt(scale)) * 2
         const toReturn: Image = image.create(original.width * scale, original.height * scale);
 
         for (let x: number = 0; x < original.width; x++) for (let y: number = 0; y < original.height; y++) helpers.imageFillRect(toReturn, x * scale, y * scale, scale, scale, original.getPixel(x, y))
