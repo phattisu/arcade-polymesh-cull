@@ -220,12 +220,14 @@ namespace Polymesh {
         const zoh = zo / 2.2
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
-                const fx = x / (w - 1), fy = y / (h - 1);
-                const sx = (z: number) => (1 - fy) * ((x1 + z) + fx * ((x2 + z) - (x1 + z))) + fy * ((x3 + z) + fx * ((x4 + z) - (x3 + z)));
-                const sy = (z: number) => (1 - fy) * ((y1 + z) + fx * ((y2 + z) - (y1 + z))) + fy * ((y3 + z) + fx * ((y4 + z) - (y3 + z)));
-                const sx0 = sx(zoh), sx1 = sx(-zoh), sy0 = sy(zoh), sy1 = sy(-zoh)
                 const col = src.getPixel(x, y);
-                if (col && col > 0) helpers.imageFillPolygon4(dest, sx0, sy0, sx1, sy0, sx0, sy1, sx1, sy1, col);
+                if (col && col > 0) {
+                    const fx = x / (w - 1), fy = y / (h - 1);
+                    const sx = (z: number) => (1 - fy) * ((x1 + z) + fx * ((x2 + z) - (x1 + z))) + fy * ((x3 + z) + fx * ((x4 + z) - (x3 + z)));
+                    const sy = (z: number) => (1 - fy) * ((y1 + z) + fx * ((y2 + z) - (y1 + z))) + fy * ((y3 + z) + fx * ((y4 + z) - (y3 + z)));
+                    const sx0 = sx(zoh), sx1 = sx(-zoh), sy0 = sy(zoh), sy1 = sy(-zoh)
+                    helpers.imageFillPolygon4(dest, sx0, sy0, sx1, sy0, sx0, sy1, sx1, sy1, col);
+                }
             }
         }
     }
