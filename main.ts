@@ -213,20 +213,15 @@ namespace Polymesh {
     }
 
     function distortImage(src: Image, dest: Image,
-        x1: number, y1: number, x2: number, y2: number,
-        x3: number, y3: number, x4: number, y4: number) {
-        const w = src.width, h = src.height;
-        const zo = Math.max(1, zoom) * 1.5
-        const zoh = zo / 2
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
+        X1: number, Y1: number, X2: number, Y2: number,
+        X3: number, Y3: number, X4: number, Y4: number) {
+        for (let y = 0; y < src.height; y++) {
+            for (let x = 0; x < src.width; x++) {
                 const col = src.getPixel(x, y);
                 if (col && col > 0) {
-                    const fx = x / (w - 1), fy = y / (h - 1);
-                    const sx = (s: number) => (1 - fy) * ((x1 + s) + fx * ((x2) - (x1))) + fy * ((x3 + s) + fx * ((x4) - (x3)));
-                    const sy = (s: number) => (1 - fy) * ((y1 + s) + fx * ((y2) - (y1))) + fy * ((y3 + s) + fx * ((y4) - (y3)));
-                    const [sx0, sx1] = [sx(zoh), sx(-zoh)], [sy0, sy1] = [sy(zoh), sy(-zoh)]
-                    helpers.imageFillPolygon4(dest, sx0, sy0, sx1, sy0, sx0, sy1, sx1, sy1, col);
+                    const sx = Math.trunc((1 - y / src.height) * (X1 + x / src.width * (X2 - X1)) + y / src.height * (X3 + x / src.width * (X4 - X3)));
+                    const sy = Math.trunc((1 - x / src.width) * (Y1 + y / src.height * (Y3 - Y1)) + x / src.width * (Y2 + y / src.height * (Y4 - Y2)))
+                    dest.setPixel(sx, sy, col);
                 }
             }
         }
