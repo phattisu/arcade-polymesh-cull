@@ -30,6 +30,7 @@ namespace Polymesh {
     //% blockid=poly_newmesh
     //% block="create new mesh"
     //% blockSetVariable=myMesh
+    //% group="create"
     //% weight=100
     export function newmesh() { return new mesh() }
 
@@ -46,6 +47,7 @@ namespace Polymesh {
         //% block=" $this set vertice at $idx by x: $x y: $y z: $z"
         //% this.shadow=variables_get this.defl=myMesh
         //% ccv.shadow=poly_shadow_vertice
+        //% group="setter"
         //% weight=88
         public setvertice(idx: number, x: number, y: number, z: number) { this.cvs[idx] = { x: x, y: y, z: z } }
 
@@ -54,6 +56,7 @@ namespace Polymesh {
         //% this.shadow=variables_get this.defl=myMesh
         //% cct.shadow=poly_shadow_triangle
         //% c.shadow=colorindexpicker
+        //% group="setter"
         //% weight=87
         public settriangle(idx: number, c: number, i1: number, i2: number, i3: number, i4?: number, img?: Image) {
             let indice = [i1, i2, i3]
@@ -65,12 +68,14 @@ namespace Polymesh {
         //% blockid=poly_delvertice
         //% block=" $this remove vertice at $idx"
         //% this.shadow=variables_get this.defl=myMesh
+        //% group="remover"
         //% weight=86
         public delvertice(idx: number) { this.cvs.removeAt(idx) }
 
         //% blockid=poly_deltriangle
         //% block=" $this remove triangle at $idx"
         //% this.shadow=variables_get this.defl=myMesh
+        //% group="remover"
         //% weight=85
         public deltriangle(idx: number) { this.cts.removeAt(idx) }
 
@@ -85,6 +90,7 @@ namespace Polymesh {
     //% mymesh.shadow=variables_get mymesh.defl=myMesh
     //% image.shadow=screen_image_picker
     //% inner.shadow=toggleYesNo
+    //% group="render"
     //% weight=80
     export function render(mymesh: mesh, image: Image, inner: boolean = false) {
         const centerX = image.width >> 1;
@@ -226,6 +232,7 @@ namespace Polymesh {
 
     //% blockid=poly_angle_change
     //% block="change $choice by $x"
+    //% group="angle"
     //% weight=60
     export function changeAngle(choice: Angles, x: number) {
         switch (choice) {
@@ -236,6 +243,7 @@ namespace Polymesh {
     }
     //% blockid=poly_camera_change
     //% block="change $choice by $x"
+    //% group="camera"
     //% weight=59
     export function changeCam(choice: Cameras, x: number) {
         switch (choice) {
@@ -247,6 +255,7 @@ namespace Polymesh {
     }
     //% blockid=poly_angle_set
     //% block="set $choice to $x"
+    //% group="angle"
     //% weight=58
     export function setAngle(choice: Angles, x: number) {
         switch (choice) {
@@ -257,7 +266,8 @@ namespace Polymesh {
     }
     //% blockid=poly_camera_set
     //% block="set $choice by $x"
-    //% weight=59
+    //% group="camera"
+    //% weight=57
     export function setCam(choice: Cameras, x: number) {
         switch (choice) {
             case 0: camx = x; break
@@ -269,32 +279,42 @@ namespace Polymesh {
 
     //% blockid=poly_sorttype
     //% block="set sorting method to $method"
+    //% group="sorting"
     //% weight=49
     export function sortingMethod(method: SortingMethods) {
         sort = method
     }
 
-    //% blockid=poly_angle_x
-    //% block="angle x"
+    //% blockid=poly_angle_get
+    //% block="$choice"
+    //% group="angle"
     //% weight=40
-    export function angleX() {
-        return ax
+    export function getAngle(choice: Angles) {
+        switch (choice) {
+            case 0: return ax
+            case 1: return ay
+            case 2: return az
+        }
+        return 0
     }
-    //% blockid=poly_angle_y
-    //% block="angle y"
-    //% weight=39
-    export function angleY() {
-        return ay
-    }
-    //% blockid=poly_angle_z
-    //% block="angle z"
-    //% weight=38
-    export function angleZ() {
-        return az
+
+    //% blockid=poly_camera_get
+    //% block="$choice"
+    //% group="camera"
+    //% weight=44
+    export function getCam(choice: Cameras) {
+        switch (choice) {
+            case 0: return camx
+            case 1: return camy
+            case 2: return camz
+            case 3: return zoom
+        }
+        return 0
     }
 
     //% blockid=poly_camera_setpos
     //% block="set camera position to x: $x y: $y z: $z"
+    //% group="camera"
     //% weight=48
     export function setcCampos(x: number, y: number, z: number) {
         camx = x
