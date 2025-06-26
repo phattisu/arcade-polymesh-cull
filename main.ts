@@ -217,7 +217,7 @@ namespace Polymesh {
         x3: number, y3: number, x4: number, y4: number) {
         const w = src.width, h = src.height;
         const zo = Math.max(1, zoom)
-        const zoh = zo / 2.2
+        const zoh = zo / 2
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const col = src.getPixel(x, y);
